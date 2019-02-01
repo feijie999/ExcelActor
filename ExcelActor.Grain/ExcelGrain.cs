@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OfficeOpenXml;
 using OfficeOpenXml.Drawing;
+using OfficeOpenXml.FormulaParsing.Utilities;
 using OfficeOpenXml.Style;
 using Orleans.Concurrency;
 
@@ -47,6 +48,7 @@ namespace ExcelActor.Grain
             return Task.CompletedTask;
         }
 
+        [AlwaysInterleave]
         public Task<string> ExportAllToText()
         {
             var obj = ExportAllToJson();
@@ -105,7 +107,6 @@ namespace ExcelActor.Grain
 
                     col.AddNotNull("row", i).AddNotNull("col", j)
                         .AddNotNullOrSpace("formula", cell.Formula);
-
                     if (!cell.IsRichText)
                     {
                         // 处理输入标志
@@ -120,13 +121,13 @@ namespace ExcelActor.Grain
                                 .AddNotNull("type", "string");
 
                         }
-                        //else if (cell.Value is KeyValuePair<bool, string>)
-                        //{
-                        //    cell.Value = ((KeyValuePair<bool, string>)cell.Value).Value;
-                        //    col.AddNotNull("value", cell.Value);
-                        //    col.AddNotNull("isInput", true)
-                        //        .AddNotNull("type", "string");
-                        //}
+                        else if (cell.Value is KeyValuePair<bool, string>)
+                        {
+                            cell.Value = ((KeyValuePair<bool, string>)cell.Value).Value;
+                            col.AddNotNull("value", cell.Value);
+                            col.AddNotNull("isInput", true)
+                                .AddNotNull("type", "string");
+                        }
                         else
                             col.AddNotNull("value", cell.Value);
                     }

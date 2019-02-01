@@ -37,6 +37,7 @@ namespace ExcelActor.Host
                     options.ClusterId = "dev";
                     options.ServiceId = "excelapp";
                 })
+                
                 .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(ExcelGrain).Assembly).WithReferences())
                 .UseAdoNetClustering(option =>
                 {

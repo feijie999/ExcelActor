@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using ExcelActor.Interface;
@@ -36,21 +37,40 @@ namespace ExcelActor.Client
                         option.ConnectionString = config["ConnectionStrings:OrleansCluster"];
                         option.Invariant = "MySql.Data.MySqlClient";
                     })
-                    .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IExcelGrain).Assembly).WithReferences())
+                    .ConfigureApplicationParts(parts =>
+                        parts.AddApplicationPart(typeof(IExcelGrain).Assembly).WithReferences())
                     .ConfigureLogging(logging => logging.AddConsole());
                 return builder;
             });
+            //await TestExcel(client);
+            await TestAdd(client);
+            Console.ReadKey();
+        }
+
+        private static async Task TestAdd(IClusterClient client)
+        {
             while (true)
             {
-                var input = Console.ReadLine();
-                if (input == "exit")
-                {
-                    break;
-                }
-                var excelGrain = client.GetGrain<IExcelGrain>(1);
+                await Task.Delay(500);
+                var testGrain = client.GetGrain<ITestGrain>(0);
+                var result = await testGrain.Add(1);
+                Console.WriteLine(result);
+            }
+        }
+
+        static async Task TestExcel(IClusterClient client)
+        {
+            while (true)
+            {
+                //var input = Console.ReadLine();
+                //if (input == "exit")
+                //{
+                //    break;
+                //}
+                var excelGrain = client.GetGrain<IExcelGrain>(2);
                 //var result = await excelGrain.Test(input);
                 //Console.WriteLine(result);
-                using (var fs = new FileStream("template.xlsx", FileMode.Open, FileAccess.Read))
+                using (var fs = new FileStream("1.xlsx", FileMode.Open, FileAccess.Read))
                 {
                     var bytes = new byte[fs.Length];
 
@@ -58,11 +78,12 @@ namespace ExcelActor.Client
                     await excelGrain.Load(bytes);
                 }
 
-               var json = await excelGrain.ExportAllToText();
+                var stopwatch = Stopwatch.StartNew();
+                var json = await excelGrain.ExportAllToText();
+                Console.WriteLine("耗时:" + stopwatch.ElapsedMilliseconds + "毫秒");
                 Console.WriteLine(json);
 
             }
-            Console.ReadKey();
         }
     }
 }
