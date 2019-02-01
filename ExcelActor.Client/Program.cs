@@ -43,13 +43,24 @@ namespace ExcelActor.Client
             while (true)
             {
                 var input = Console.ReadLine();
-                var excelGrain = client.GetGrain<IExcelGrain>(0);
-                var result = await excelGrain.Test(input);
-                Console.WriteLine(result);
-                if (Console.ReadLine() == "exit")
+                if (input == "exit")
                 {
                     break;
                 }
+                var excelGrain = client.GetGrain<IExcelGrain>(1);
+                //var result = await excelGrain.Test(input);
+                //Console.WriteLine(result);
+                using (var fs = new FileStream("template.xlsx", FileMode.Open, FileAccess.Read))
+                {
+                    var bytes = new byte[fs.Length];
+
+                    await fs.ReadAsync(bytes);
+                    await excelGrain.Load(bytes);
+                }
+
+               var json = await excelGrain.ExportAllToText();
+                Console.WriteLine(json);
+
             }
             Console.ReadKey();
         }

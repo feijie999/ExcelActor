@@ -21,12 +21,17 @@ namespace ExcelActor.Host
                 .AddJsonFile("appsettings.json");
 
             var config = builder.Build();
+            //单台服务器上模拟多个Silo集群
+            Random rd = new Random();
+            var siloPort = rd.Next(40001, 50000);
+            var gatewayPort = rd.Next(30003, 40000);
+
             var silo = new SiloHostBuilder()
-                .Configure<EndpointOptions>(options =>
-                {
-                    options.AdvertisedIPAddress = IPAddress.Loopback;
-                })
-                //.ConfigureEndpoints(siloPort: siloPort, gatewayPort: gatewayPort, listenOnAnyHostAddress: true,advertisedIP: IPAddress.Loopback)
+                //.Configure<EndpointOptions>(options =>
+                //{
+                //    options.AdvertisedIPAddress = IPAddress.Loopback;
+                //})
+                .ConfigureEndpoints(siloPort: siloPort, gatewayPort: gatewayPort, listenOnAnyHostAddress: true, advertisedIP: IPAddress.Loopback)
                 .Configure<ClusterOptions>(options =>
                 {
                     options.ClusterId = "dev";
@@ -47,18 +52,10 @@ namespace ExcelActor.Host
                 .ConfigureLogging(logging => logging.AddConsole())
                 .Build();
 
-            var stopEvent = new ManualResetEvent(false);
-            Console.CancelKeyPress += (sender, eventArgs) =>
-            {
-                eventArgs.Cancel = false;
-                stopEvent.Set();
-            };
-
             Console.WriteLine("Starting");
             await silo.StartAsync();
             Console.WriteLine("Started");
-
-            stopEvent.WaitOne();
+            Console.ReadKey();
             Console.WriteLine("Shutting down");
             await silo.StopAsync();
         }

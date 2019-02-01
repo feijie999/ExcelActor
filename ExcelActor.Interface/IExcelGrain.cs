@@ -8,6 +8,8 @@ namespace ExcelActor.Interface
     {
         Task Load(byte[] excelBytes);
 
+        Task<string> ExportAllToText();
+
         Task<string> Test(string name);
     }
 }
